@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>保健問題サイト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .question h2 {
+            font-size: 20px; /* 質問の文字サイズを変更する部分 */
+        }
+
+        .question {
+            margin-bottom: 15px;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .answer {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .question img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+        }
+
+        .quiz-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 2px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition-duration: 0.4s;
+        }
+
+        .quiz-button:hover {
+            background-color: white;
+            color: black;
+            border: 2px solid #4CAF50;
+        }
+
+        #redirectButton {
+            margin-top: 20px;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            transition-duration: 0.4s;
+        }
+
+        #redirectButton:hover {
+            background-color: white;
+            color: #3498db;
+            border: 2px solid #3498db;
+        }
+        /* デフォルトのヘッダーを消す */
+        .header-image-wrapper {
+            display: none;
+        }
+   
+        #blog-title {
+            display: none;
+        }
+   
+        /* ヘッダー画像を画面サイズに自動で合わせる */
+        .header1 img, .header2 img {
+            display: block;
+            width: 100%;
+            margin: 0 auto;
+        }
+   
+       
+    </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+</head>
+<body>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-00V6CFSVF5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-00V6CFSVF5');
+    </script>
+     <!-- ヘッダー（PC版）-->
+    <div class="header1">
+        <img src="スマホヘッダーsyukusyouban.png">
+    </div>     
+    <div id="questionsContainer"></div>
+
+    <div id="result"></div>
+    
+    <script>
+    // CSVファイルから問題を読み込む
+    function loadQuestions() {
+        Papa.parse('questions.csv', {
+            download: true,
+            header: true,
+            complete: function(results) {
+                const questions = results.data.map(row => ({
+                    question: row.question,
+                    answers: row.answers.split(','),
+                    imageUrl: row.imageUrl
+                }));
+
+                // 問題を表示
+                displayQuestions(questions);
+            }
+        });
+    }
+
+    // 問題をシャッフルして表示する関数
+    function displayQuestions(questions) {
+        const shuffledQuestions = shuffleArray(questions);
+        const questionsContainer = document.getElementById('questionsContainer');
+        questionsContainer.innerHTML = ''; // 古い問題をクリア
+
+        shuffledQuestions.forEach((q, index) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.classList.add('question');
+            questionDiv.innerHTML = `
+                <h2>${q.question}</h2>
+                ${q.imageUrl ? `<img src="${q.imageUrl}" alt="問題の画像">` : ''}
+                <input type="text" id="q${index + 1}">
+                <button class="quiz-button" onclick="checkAnswer(${index + 1})">回答する</button>
+                <div id="result${index + 1}" class="answer"></div>
+            `;
+            questionsContainer.appendChild(questionDiv);
+        });
+
+        // 正解の回答を設定
+        window.correctAnswers = questions.map(q => q.answers);
+    }
+
+    // ランダムに配列をシャッフルする関数
+    function shuffleArray(array) {
+        const shuffledArray = [...array];
+        for (let i = shuffledArray.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
+        }
+        return shuffledArray;
+    }
+
+    // 各問題ごとに回答をチェックする関数
+    function checkAnswer(questionNumber) {
+        // ユーザーの回答を取得
+        const userAnswer = document.getElementById(`q${questionNumber}`).value.trim().toUpperCase();
+
+        // 正解と比較して結果を表示
+        const resultDiv = document.getElementById(`result${questionNumber}`);
+        if (window.correctAnswers[questionNumber - 1].includes(userAnswer)) {
+            resultDiv.innerHTML = '正解！';
+            resultDiv.style.color = 'green';
+        } else {
+            resultDiv.innerHTML = '不正解。正しい回答は ' + window.correctAnswers[questionNumber - 1].join(' または ');
+            resultDiv.style.color = 'red';
+        }
+
+        // 全体の結果を表示
+        const resultSummary = document.getElementById('result');
+        const correctCount = document.querySelectorAll('.answer[style="color: green;"]').length;
+        resultSummary.innerHTML = `正解数: ${correctCount} / ${window.correctAnswers.length}`;
+    }
+
+    // ページ読み込み時に問題を表示
+    window.onload = function() {
+        loadQuestions();
+    }
+</script>
+
+    <p>問題の順番はランダムな順番になっています。更新すると問題の順番が変わりもう一回できます。</p>
+    <p>基本的に教科書の問題、文章をもとに製作しています</p>
+</body>
+</html>
