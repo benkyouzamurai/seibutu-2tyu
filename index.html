@@ -117,7 +117,7 @@
             complete: function(results) {
                 const questions = results.data.map(row => ({
                     question: row.question,
-                    answers: row.answers.split(','),
+                    answers: row.answers.split(',').map(answer => answer.trim().toUpperCase()), // 大文字で統一
                     imageUrl: row.imageUrl
                 }));
 
@@ -133,6 +133,9 @@
         const questionsContainer = document.getElementById('questionsContainer');
         questionsContainer.innerHTML = ''; // 古い問題をクリア
 
+        // 正解の回答をシャッフルされた順番で保存
+        window.correctAnswers = [];
+
         shuffledQuestions.forEach((q, index) => {
             const questionDiv = document.createElement('div');
             questionDiv.classList.add('question');
@@ -144,10 +147,10 @@
                 <div id="result${index + 1}" class="answer"></div>
             `;
             questionsContainer.appendChild(questionDiv);
-        });
 
-        // 正解の回答を設定
-        window.correctAnswers = questions.map(q => q.answers);
+            // シャッフルされた順に正解を保存
+            window.correctAnswers.push(q.answers);
+        });
     }
 
     // ランダムに配列をシャッフルする関数
